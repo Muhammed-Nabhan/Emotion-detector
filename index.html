@@ -27,7 +27,8 @@
     <script type="text/javascript">
         let videoPlayer, canvas, context, cv;
 
-        function onOpenCvLoaded() {
+         function onOpenCvLoaded() 
+         {
             videoPlayer = document.getElementById('video-player');
             canvas = document.getElementById('canvas');
             context = canvas.getContext('2d');
@@ -46,7 +47,8 @@
                 });
         }
 
-        function startEmotionRecognition() {
+        function startEmotionRecognition() 
+        {
             // Load the pre-trained Haar cascade classifier for face detection
             cv = cv || window.cv;
             const faceCascade = new cv.CascadeClassifier();
