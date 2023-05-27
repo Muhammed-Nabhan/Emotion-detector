@@ -8,8 +8,10 @@ body {
     justify-content: center;
     align-items: center;
   }
-  
- canvas{
+  #video {
+    transform: scaleX(-1);
+  }
+ #canvas{
   position: absolute;
-  
+
  }
