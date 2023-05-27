@@ -1,117 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Emotion Recognition</title>
-    <style>
-        body {
-            text-align: center;
-            margin-top: 100px;
-        }
-
-        #video-player {
-            margin-top: 20px;
-        }
-
-        canvas {
-            display: none;
-        }
-    </style>
+  <title>Emotion Detection</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    <h1>Emotion Recognition</h1>
+  <h1>Emotion Detection</h1>
+  <div id="videoContainer">
+    <video id="videoElement" autoplay muted></video>
+    <canvas id="canvasElement"></canvas>
+  </div>
+  <button id="detectButton">Detect Emotions</button>
+  <div id="resultContainer"></div>
 
-    <video id="video-player" width="640" height="480" autoplay></video>
-    <canvas id="canvas" width="640" height="480"></canvas>
-
-    <script async src="./opencv.js" onload="onOpenCvLoaded();" type="text/javascript"></script>
-    <script  async src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.9.0/dist/tf.min.js"></script>
-    <script type="text/javascript">
-        let videoPlayer, canvas, context, cv;
-
-        function onOpenCvLoaded() 
-        {
-            videoPlayer = document.getElementById('video-player');
-            canvas = document.getElementById('canvas');
-            context = canvas.getContext('2d');
-
-            // Access the camera and perform emotion recognition
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    videoPlayer.srcObject = stream;
-                    videoPlayer.play();
-
-                    // Start the emotion recognition process
-                     startEmotionRecognition();
-                })
-                .catch(error => {
-                    console.error('Error accessing the camera:', error);
-                });
-        }
-
-        async function startEmotionRecognition() 
-        {
-            // Load the pre-trained Haar cascade classifier for face detection
-            cv = cv || window.cv;
-            const faceCascade = new cv.CascadeClassifier();
-            faceCascade.load('haarcascade_frontalface_default.xml');
-
-            // Load the pre-trained model for emotion recognition
-            model = await tf.loadLayersModel('model.json');
-
-            // Start the emotion recognition process
-            setInterval(() => {
-                // Capture a frame from the video
-                context.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
-                const frame = context.getImageData(0, 0, canvas.width, canvas.height);
-
-                // Convert the frame to grayscale
-                const gray = new cv.Mat();
-                cv.cvtColor(frame, gray, cv.COLOR_RGBA2GRAY);
-
-                // Detect faces in the grayscale image
-                const faces = new cv.RectVector();
-                const scaleFactor = 1.1;
-                const minNeighbors = 3;
-                const flags = 0;
-                const minSize = new cv.Size(30, 30);
-                faceCascade.detectMultiScale(gray, faces, scaleFactor, minNeighbors, flags, minSize);
-
-                // Process each detected face
-                for (let i = 0; i < faces.size(); i++) {
-                    const face = faces.get(i);
-
-                    // Extract the face region from the grayscale image
-                    const faceRegion = gray.roi(face);
-
-                    // Resize the face region to the input size expected by the model
-                    const inputSize = [48, 48];
-                    const resizedFace = new cv.Mat();
-                    cv.resize(faceRegion, resizedFace, new cv.Size(...inputSize));
-
-                    // Normalize and preprocess the resized face image for input to the model
-                    const tensor = tf.browser.fromPixels(resizedFace)
-                        .resizeBilinear(inputSize)
-                        .toFloat()
-                        .div(255)
-                        .expandDims();
-
-                    // Perform emotion recognition by passing the face tensor through the model
-                    const prediction = model.predict(tensor);
-                    const emotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'];
-                    const emotionIndex = prediction.argMax(1).dataSync()[0];
-                    const emotion = emotions[emotionIndex];
-
-                    // Display the emotion label on the canvas
-                    const text = `Emotion: ${emotion}`;
-                    cv.putText(frame, text, new cv.Point(face.x, face.y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.9, [255, 255, 255, 255], 2);
-                }
-
-                // Show the processed frame on the canvas
-                cv.imshow('canvas', frame);
-                gray.delete();
-                faces.delete();
-            }, 100);
-        }
-    </script>
+  <script src="script.js"></script>
 </body>
 </html>
