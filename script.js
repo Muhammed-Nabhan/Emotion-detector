@@ -9,15 +9,25 @@ Promise.all([
 ]).then(startVideo)
 
 
-function startVideo()
-{
   navigator.mediaDevices.getUserMedia(
     {
       video: {} },
       stream=>video.srcObject=stream,
       err=>console.error(err)
       )
-    }
+      function startVideo() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(stream => {
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+              video.play();
+            };
+          })
+          .catch(err => {
+            console.error('Error accessing camera:', err);
+          });
+      }
 
     
   
