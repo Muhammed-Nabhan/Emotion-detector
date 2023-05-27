@@ -24,12 +24,12 @@
     <canvas id="canvas" width="640" height="480"></canvas>
 
     <script async src="./opencv.js" onload="onOpenCvLoaded();" type="text/javascript"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.9.0/dist/tf.min.js"></script>
+    <script  async src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.9.0/dist/tf.min.js"></script>
     <script type="text/javascript">
         let videoPlayer, canvas, context, cv;
 
-         function onOpenCvLoaded() 
-         {
+        async function onOpenCvLoaded() 
+        {
             videoPlayer = document.getElementById('video-player');
             canvas = document.getElementById('canvas');
             context = canvas.getContext('2d');
@@ -41,7 +41,7 @@
                     videoPlayer.play();
 
                     // Start the emotion recognition process
-                    startEmotionRecognition();
+                    await startEmotionRecognition();
                 })
                 .catch(error => {
                     console.error('Error accessing the camera:', error);
@@ -56,7 +56,7 @@
             faceCascade.load('haarcascade_frontalface_default.xml');
 
             // Load the pre-trained model for emotion recognition
-            const model = await tf.loadLayersModel('model.json');
+            model = await tf.loadLayersModel('model.json');
 
             // Start the emotion recognition process
             setInterval(() => {
