@@ -92,8 +92,8 @@ function displayError(message) {
 
 // Initialize camera stream when the page is loaded
 window.addEventListener('DOMContentLoaded', async () => {
-  await faceapi.loadSsdMobilenetv1Model('/models');
-  await faceapi.loadFaceExpressionsModel('/models');
+  await faceapi.loadSsdMobilenetv1Model('/weightss');
+  await faceapi.loadFaceExpressionsModel('/weights');
   initializeCamera();
 });
 
