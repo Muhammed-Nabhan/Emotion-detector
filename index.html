@@ -24,86 +24,90 @@
     <canvas id="canvas" width="640" height="480"></canvas>
 
     <script async src="https://docs.opencv.org/master/opencv.js" onload="onOpenCvLoaded();" type="text/javascript"></script>
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <script type="text/javascript">
         let videoPlayer, canvas, context, cv;
-        let spotifyPlayer;
 
         function onOpenCvLoaded() {
-            // ... existing code ...
+            videoPlayer = document.getElementById('video-player');
+            canvas = document.getElementById('canvas');
+            context = canvas.getContext('2d');
 
-            // Start the emotion recognition process
-            startEmotionRecognition();
+            // Access the camera and perform emotion recognition
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    videoPlayer.srcObject = stream;
+                    videoPlayer.play();
+
+                    // Start the emotion recognition process
+                    startEmotionRecognition();
+                })
+                .catch(error => {
+                    console.error('Error accessing the camera:', error);
+                });
         }
 
-        async function startEmotionRecognition() {
-            // ... existing code ...
+        function startEmotionRecognition() {
+            // Load the pre-trained Haar cascade classifier for face detection
+            cv = cv || window.cv;
+            const faceCascade = new cv.CascadeClassifier();
+            faceCascade.load('haarcascade_frontalface_default.xml');
 
-            // Authenticate with Sotify API
-            const clientId = 'd05d2efe136140a692c041aeb31f0bb5';
-            const clientSecret = 'bd54f8c6c7c1449ca65d965b2e9ed5ba';
-            const encodedCredentials = btoa(`${clientId}:${clientSecret}`);
-            const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': `Basic ${encodedCredentials}`,
-                },
-                body: 'grant_type=client_credentials',
-            });
-            const tokenData = await tokenResponse.json();
-            const accessToken = tokenData.access_token;
+            // Load the pre-trained model for emotion recognition
+            const model = await tf.loadLayersModel('model.json');
 
-            // Search for songs based on emotion
-            const emotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'];
-            const detectedEmotionIndex = prediction.argMax(1).dataSync()[0]; // Obtain the detected emotion index from the emotion recognition process
-            const detectedEmotion = emotions[detectedEmotionIndex];
+            // Start the emotion recognition process
+            setInterval(() => {
+                // Capture a frame from the video
+                context.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+                const frame = context.getImageData(0, 0, canvas.width, canvas.height);
 
-            const searchResponse = await fetch(`https://api.spotify.com/v1/search?q=${detectedEmotion}&type=track`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                },
-            });
-            const searchData = await searchResponse.json();
-            const tracks = searchData.tracks.items;
+                // Convert the frame to grayscale
+                const gray = new cv.Mat();
+                cv.cvtColor(frame, gray, cv.COLOR_RGBA2GRAY);
 
-            // Play songs using Spotify Web Playback SDK
-            const deviceId = devices[0].id // Obtain the Spotify device ID to play the songs on
-            spotifyPlayer = new Spotify.Player({
-                name: 'Emotion Recognition Player',
-                getOAuthToken: callback => {
-                    callback(accessToken);
-                },
-                volume: 0.5,
-            });
+                // Detect faces in the grayscale image
+                const faces = new cv.RectVector();
+                const scaleFactor = 1.1;
+                const minNeighbors = 3;
+                const flags = 0;
+                const minSize = new cv.Size(30, 30);
+                faceCascade.detectMultiScale(gray, faces, scaleFactor, minNeighbors, flags, minSize);
 
-            spotifyPlayer.addListener('ready', ({ device_id }) => {
-                console.log('Ready with Device ID', device_id);
+                // Process each detected face
+                for (let i = 0; i < faces.size(); i++) {
+                    const face = faces.get(i);
 
-                spotifyPlayer.device_id = device_id;
-                spotifyPlayer.connect();
+                    // Extract the face region from the grayscale image
+                    const faceRegion = gray.roi(face);
 
-                // Play the first song in the recommended tracks
-                spotifyPlayer.addListener('ready', () => {
-                    const firstTrack = tracks[0];
-                    spotifyPlayer._options.getOAuthToken(accessToken => {
-                        fetch(`https://api.spotify.com/v1/me/player/play?device_id=${device_id}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${accessToken}`,
-                            },
-                            body: JSON.stringify({
-                                uris: [firstTrack.uri],
-                            }),
-                        });
-                    });
-                });
-            });
+                    // Resize the face region to the input size expected by the model
+                    const inputSize = [48, 48];
+                    const resizedFace = new cv.Mat();
+                    cv.resize(faceRegion, resizedFace, new cv.Size(...inputSize));
 
-            spotifyPlayer.addListener('not_ready', ({ device_id }) => {
-                console.log('Device ID has gone offline', device_id);
-            });
+                    // Normalize and preprocess the resized face image for input to the model
+                    const tensor = tf.browser.fromPixels(resizedFace)
+                        .resizeBilinear(inputSize)
+                        .toFloat()
+                        .div(255)
+                        .expandDims();
+
+                    // Perform emotion recognition by passing the face tensor through the model
+                    const prediction = model.predict(tensor);
+                    const emotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'];
+                    const emotionIndex = prediction.argMax(1).dataSync()[0];
+                    const emotion = emotions[emotionIndex];
+
+                    // Display the emotion label on the canvas
+                    const text = `Emotion: ${emotion}`;
+                    cv.putText(frame, text, new cv.Point(face.x, face.y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.9, [255, 255, 255, 255], 2);
+                }
+
+                // Show the processed frame on the canvas
+                cv.imshow('canvas', frame);
+                gray.delete();
+                faces.delete();
+            }, 100);
         }
     </script>
 </body>
