@@ -1,49 +1,88 @@
-const video=document.getElementById("video")
+const video = document.getElementById("video");
 
+// Load face detection models
 Promise.all([
-  faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
-  faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
-  faceapi.nets.faceRecognitionNet.loadFromUri('./models'),
-  faceapi.nets.faceExpressionNet.loadFromUri('./models')
-  
-]).then(startVideo)
+  faceapi.nets.tinyFaceDetector.loadFromUri("./models"),
+  faceapi.nets.faceExpressionNet.loadFromUri("./models")
+]).then(startVideo);
+
+// Start video streaming
+function startVideo() {
+  navigator.mediaDevices
+    .getUserMedia({ video: true })
+    .then(stream => {
+      video.srcObject = stream;
+      video.onloadedmetadata = () => {
+        video.play();
+        initializeFaceDetection();
+      };
+    })
+    .catch(err => {
+      console.error("Error accessing camera:", err);
+    });
+}
+
+// Initialize face detection and emotion recognition
+function initializeFaceDetection() {
+  video.addEventListener("play", () => {
+    setInterval(async () => {
+      const detections = await faceapi
+        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+        .withFaceExpressions();
+
+      // Get the dominant emotion from the detected expressions
+      const emotions = detections.map(detection => {
+        const expressions = detection.expressions;
+        const maxExpression = Object.keys(expressions).reduce(
+          (a, b) => (expressions[a] > expressions[b] ? a : b)
+        );
+        const maxPercentage = expressions[maxExpression];
+        return { emotion: maxExpression, percentage: maxPercentage };
+      });
+
+      // Get the dominant emotion with the maximum percentage
+      const dominantEmotion = getDominantEmotion(emotions);
+
+      // Display the dominant emotion on the webpage
+      const dominantEmotionElement = document.getElementById("dominant-emotion");
+      dominantEmotionElement.textContent = ` ${dominantEmotion}`;
+
+      const quoteElement=document.getElementById("quote");
+      const quote=getpredefinedQuote(dominantEmotion);
+      quoteElement.textContent=quote;
+
+    }, 100);
+  });
+}
+
+// Get the dominant emotion with the maximum percentage
+function getDominantEmotion(emotions) {
+  let maxPercentage = 0;
+  let dominantEmotion = null;
+
+  for (const emotionData of emotions) {
+    const { emotion, percentage } = emotionData;
+    if (percentage > maxPercentage) {
+      maxPercentage = percentage;
+      dominantEmotion = emotion;
+    }
+  }
+
+  return dominantEmotion;
+}
+
+/// Fetch a random quote based on the detected emotion
+function getpredefinedQuote(emotion) {
+  const quotes={
+    happy:"Happiness is a choice.",
+    sad:"Every cloud has a silver lining.",
+    angry:"Don't let anger control you.",
+    surprised:"Life is full of surprises.",
+    disgusted:"Choose to focus on the positive",
+    fearful:"Face your fears and overcome them.",
+    neutral:"Stay calm and find inner peace."
+  };
+return quotes[emotion] || "Emotion not recognized."
+}
 
 
-  navigator.mediaDevices.getUserMedia(
-    {
-      video: {} },
-      stream=>video.srcObject=stream,
-      err=>console.error(err)
-      )
-      function startVideo() {
-        navigator.mediaDevices.getUserMedia({ video: true })
-          .then(stream => {
-            const video = document.getElementById('video');
-            video.srcObject = stream;
-            video.onloadedmetadata = () => {
-              video.play();
-            };
-          })
-          .catch(err => {
-            console.error('Error accessing camera:', err);
-          });
-      }
-
-    
-  
-video.addEventListener('play',()=>{
-  const canvas=faceapi.createCanvasFromMedia(video)
-  document.body.append(canvas)
-  const  displaySize={width: video.width,height:video.height}
-  faceapi.matchDimensions(canvas,displaySize)
-  setInterval(async () => {
-    const detections=await faceapi.detectAllFaces(video
-    ,new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
-    const resizedDetections=faceapi.resizeResults(detections,displaySize)
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-    faceapi.draw.drawDetections(canvas,resizedDetections)
-    faceapi.draw.drawFaceLandmarks(canvas,resizedDetections)
-    faceapi.draw.drawFaceExpressions(canvas,resizedDetections)
-    
-  },100)
-})

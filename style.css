@@ -1,23 +1,120 @@
+*html{
+  box-sizing: border-box;
+}
+
+*,*::after,*::before{
+  box-sizing: inherit;
+}
+
 body {
+  background:url("./real.jpg")top right;
+  background-repeat: no-repeat;
+  background-size:cover;
     font-family: Arial, sans-serif;
     margin:0;
-    display: flex;
-    padding:0;
-    width:100vw;
     height:100vh;
-    justify-content: center;
+    padding:0;
+    
+   
+    
+  }
+  .main{
+    display: flex;
+    flex-direction: column;
+    
     align-items: center;
+    align-content: center;
+   
+   justify-content: center;
+   justify-items: center;
     position: relative;
+    
+    
+    width:100%;
+    height:100%;
+    
+  }
+  .item1{
+    display: flex;
+    
+    
+   justify-content: center;
+   border: none;
+    
+ 
+  }
+
+  .item2{
+   display: flex;
+   justify-content: center;
+   padding-top:3rem;
+   position:relative;
+   height:30rem;
+   width:30rem;
+    border-radius: 50%;
+    
+  }
+  #dominant-emotion{
+    font-size:6rem;
+    font-weight:bolder;
+    color: yellowgreen;
+  }
+  #quote{
+    font-size:5rem;
+    font-weight:bolder;
+    color: rgb(204, 231, 225);
+  }
+  .item4:hover{
+    transform: scale(1.1);
+    color: #ffc600;
+    box-shadow: 0 0 1rem #ffc600;
+  }
+  .item5:hover{
+    transform: scale(1.1);
+    color: #ffc600;
+    box-shadow: 0 0 1rem #ffc600;
+  }
+  h1{
+    font-size:3rem;
+    font-weight: bolder;
+    color: rgb(247, 252, 250);
+    
+  }
+  h1:hover{
+    transform: scale(1.1);
+    color: #ffc600;
+    text-shadow: 0 0 1rem #ffc600
   }
   #video {
+   
+    
+  
+     height:32rem;
+      width:32rem;
+     
+      border-radius: 50%;
+     position: relative;
+    
+    
     transform: scaleX(-1);
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+   
+  
+   
+    
+  
+   top: 0;
+   left: 0;
+   object-fit: cover;
+    border: 2px solid green;
+  }
+  #video:hover{
+    transform: scale(1.1);
+    color: #ffc600;
+    box-shadow: 0 0 2rem #ffc600;
   }
  #canvas{
+
   position: absolute;
   top: 0;
       left: 0;
@@ -25,4 +122,40 @@ body {
       height: 100%;
 
 
+ }
+
+ @media screen and (max-width:768px){
+   
+  .main{
+     display: block;
+     
+  }
+  .item2{
+      display: flex;
+      justify-content: center;
+    align-items:stretch;
+      margin-bottom:20px;
+      
+      
+      position:relative;
+      height:28rem;
+      width:28rem;
+       border-radius: 50%;
+       
+
+  }
+  #video{
+
+     /*position: relative;*/
+    
+    
+     height:30rem;
+      width:30rem;
+    transform: scaleX(-1);
+    position: absolute;
+   top: 0;
+   left: 0;
+   object-fit:fill;
+    
+  }
  }
