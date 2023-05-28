@@ -63,6 +63,7 @@ body {
     font-size:5rem;
     font-weight:bolder;
     color: rgb(204, 231, 225);
+    font-family: Georgia, 'Times New Roman', Times, serif;
   }
   .item4:hover{
     transform: scale(1.1);
