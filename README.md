@@ -16,4 +16,6 @@ Features
 4.Fetching and displaying a random quote based on the detected emotion.
   
   *Screenshots*
-  
+  ![happy](https://github.com/Muhammed-Nabhan/ME_internship-project/assets/83818758/98fbb86b-e6af-4874-ad60-b5e2eb440e4f)
+
+![angry](https://github.com/Muhammed-Nabhan/ME_internship-project/assets/83818758/f822da54-5ffd-439c-9c7b-1698a22c250f)
